@@ -1,0 +1,9 @@
+### Получить все задачи
+GET http://localhost:5164/api/todoitems
+Accept: application/json
+
+### Создать новую задачу
+POST http://localhost:5164/api/todoitems
+Content-Type: application/json
+
+"Сделать подходы на максимум"
