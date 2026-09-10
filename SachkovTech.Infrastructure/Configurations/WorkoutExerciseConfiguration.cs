@@ -24,18 +24,11 @@ public class WorkoutExerciseConfiguration : IEntityTypeConfiguration<WorkoutExer
                 id => id.Value,
                 value => WorkoutId.Create(value));
 
-         
-        builder.ComplexProperty(we => we.ExerciseType, tb =>
-        {
-            tb.Property(p => p.ExerciseTypeId)
-                .HasColumnName("exercise_type_id")
-                .HasConversion(
-                    id => id.Value,
-                    value => ExerciseTypeId.Create(value));
-
-            tb.Property(p => p.ExerciseId)
-                .HasColumnName("exercise_id");
-        });
+        builder.Property(we => we.ExerciseId)
+            .HasColumnName("exercise_id")
+            .HasConversion(
+                id => id.Value,
+                value => ExerciseId.Create(value));
 
         builder.Property(we => we.Reps)
             .HasConversion(

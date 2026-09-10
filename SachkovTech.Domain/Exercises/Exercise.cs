@@ -2,7 +2,6 @@ using System;
 using CSharpFunctionalExtensions;
 using SachkovTech.Domain.Exercises.ValueObjects;
 using SachkovTech.Domain.Shared;
-using SachkovTech.Domain.Shared.Ids;
 
 namespace SachkovTech.Domain.Exercises;
 
@@ -13,17 +12,14 @@ public class Exercise : Entity<ExerciseId> , ISoftDeletable
     private Exercise() { }
 
     internal Exercise(
-        ExerciseId id, 
-        ExerciseTypeId exerciseTypeId, 
-        ExerciseName name, 
+        ExerciseId id,
+        ExerciseName name,
         MuscleGroup muscleGroup) : base(id)
     {
-        ExerciseTypeId = exerciseTypeId;
         Name = name;
         MuscleGroup = muscleGroup;
     }
-        
-    public ExerciseTypeId ExerciseTypeId { get; private set; } = null!;
+
     public ExerciseName Name { get; private set; } = null!;
     public MuscleGroup MuscleGroup { get; private set; } = null!;
     public MediaPath? MediaPath { get; private set; } 
@@ -49,18 +45,14 @@ public class Exercise : Entity<ExerciseId> , ISoftDeletable
         MediaPath = null;
     }
     public static Result<Exercise, Error> Create(
-        ExerciseId id, 
-        ExerciseTypeId exerciseTypeId, 
-        ExerciseName name, 
+        ExerciseId id,
+        ExerciseName name,
         MuscleGroup muscleGroup)
     {
         if (id == null || id.Value == Guid.Empty)
             return Errors.General.ValueIsInvalid("Exercise Id");
 
-        if (exerciseTypeId == null || exerciseTypeId.Value == Guid.Empty)
-            return Errors.General.ValueIsInvalid("Exercise Type Id");
-
-        return new Exercise(id, exerciseTypeId, name, muscleGroup); 
+        return new Exercise(id, name, muscleGroup);
     }
 
     public void Update(ExerciseName name, MuscleGroup muscleGroup)

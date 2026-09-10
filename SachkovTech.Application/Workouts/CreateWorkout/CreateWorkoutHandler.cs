@@ -12,7 +12,7 @@ namespace SachkovTech.Application.Workouts.CreateWorkout;
 
 public class CreateWorkoutHandler(
     IWorkoutsRepository workoutsRepository,
-    IExerciseTypesRepository exerciseTypesRepository,
+    IExercisesRepository exercisesRepository,
     ILogger<CreateWorkoutHandler> logger)
 {
     public async Task<Result<CreateWorkoutResponse, Error>> Handle(
@@ -31,31 +31,16 @@ public class CreateWorkoutHandler(
 
         foreach (var dto in request.Exercises)
         {
-             
-            var exerciseTypeId = ExerciseTypeId.Create(dto.ExerciseTypeId);
-            var exerciseType = await exerciseTypesRepository.GetByIdAsync(exerciseTypeId, cancellationToken);
-
-            if (exerciseType is null)
-            {
-                logger.LogWarning("Вид упражнения с ID {ExerciseTypeId} не найден", dto.ExerciseTypeId);
-                return Errors.General.NotFound(dto.ExerciseTypeId);
-            }
-
-             
             var exerciseId = ExerciseId.Create(dto.ExerciseId);
 
-             
-            var exerciseExists = exerciseType.Exercises.Any(e => e.Id == exerciseId);
-            if (!exerciseExists)
+            var existingExercise = await exercisesRepository.GetByIdAsync(exerciseId, cancellationToken);
+            if (existingExercise.IsFailure)
             {
-                logger.LogWarning("Упражнение с ID {ExerciseId} не найдено внутри типа {ExerciseTypeId}", 
-                    dto.ExerciseId, dto.ExerciseTypeId);
+                logger.LogWarning("Упражнение с ID {ExerciseId} не найдено", dto.ExerciseId);
                 return Errors.General.NotFound(dto.ExerciseId);
             }
 
-             
-            var exerciseTypeVo = new WorkoutExerciseType(exerciseTypeId, exerciseId.Value);
-            var exerciseResult = CreateWorkoutExercise(dto, exerciseTypeVo);
+            var exerciseResult = CreateWorkoutExercise(dto, exerciseId);
 
             if (exerciseResult.IsFailure)
                 return exerciseResult.Error;
@@ -73,8 +58,8 @@ public class CreateWorkoutHandler(
     }
 
     private Result<WorkoutExercise, Error> CreateWorkoutExercise(
-        CreateExerciseDto dto, 
-        WorkoutExerciseType exerciseTypeVo)
+        CreateExerciseDto dto,
+        ExerciseId exerciseId)
     {
         var setsResult = Sets.Create(dto.Sets);
         if (setsResult.IsFailure) return setsResult.Error;
@@ -87,7 +72,7 @@ public class CreateWorkoutHandler(
 
         return WorkoutExercise.Create(
             WorkoutExerciseId.Create(Guid.NewGuid()),
-            exerciseTypeVo,
+            exerciseId,
             setsResult.Value,
             repsResult.Value,
             weightResult.Value);

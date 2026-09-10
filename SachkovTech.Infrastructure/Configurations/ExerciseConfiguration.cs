@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SachkovTech.Domain;
 using SachkovTech.Domain.Exercises;
 using SachkovTech.Domain.Exercises.ValueObjects;
-using SachkovTech.Domain.Shared.Ids;
 namespace SachkovTech.Infrastructure.Configurations;
 
 public class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
@@ -19,12 +18,6 @@ public class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
             .HasConversion(new ValueConverter<ExerciseId, Guid>(
                 id => id.Value,
                 value => ExerciseId.Create(value)));
-             
-        builder.Property(e => e.ExerciseTypeId)
-            .HasConversion(new ValueConverter<ExerciseTypeId, Guid>(
-                id => id.Value,
-                value => ExerciseTypeId.Create(value)))
-            .IsRequired();
 
         builder.Property(e => e.Name)
             .HasConversion(new ValueConverter<ExerciseName, string>(

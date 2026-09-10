@@ -19,7 +19,6 @@ public static class Inject
     {
         services.AddScoped<IWorkoutsRepository, WorkoutsRepository>();
         services.AddScoped<IExercisesRepository, ExercisesRepository>();
-        services.AddScoped<IExerciseTypesRepository, ExerciseTypesRepository>();
         services.AddSingleton<SoftDeleteInterceptor>();
         services.AddScoped<IFileProvider, MinioProvider>();
         services.AddMinio(configuration);

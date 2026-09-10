@@ -6,8 +6,6 @@ using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using SachkovTech.API.Validation;
 using SachkovTech.API.Extensions;
 using SachkovTech.API.Middlewares;
-using SachkovTech.Application.Exercises;
-using SachkovTech.Infrastructure.Repositories;
 using Serilog;
 using Serilog.Events;
 
@@ -36,8 +34,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Database"));
 });
 
-builder.Services.AddScoped<IExerciseTypesRepository, ExerciseTypesRepository>();
- 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

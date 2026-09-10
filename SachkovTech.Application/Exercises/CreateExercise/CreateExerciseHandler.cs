@@ -5,22 +5,20 @@ using SachkovTech.Domain;
 using SachkovTech.Domain.Exercises;
 using SachkovTech.Domain.Exercises.ValueObjects;
 using SachkovTech.Domain.Shared;
-using SachkovTech.Domain.Shared.Ids;
 
 namespace SachkovTech.Application.Exercises.CreateExercise;
 
 public class CreateExerciseHandler(
     IExercisesRepository exercisesRepository,
-    IExerciseTypesRepository exerciseTypesRepository,
-    ILogger<CreateExerciseHandler> logger) 
+    ILogger<CreateExerciseHandler> logger)
 {
     public async Task<Result<Guid, Error>> Handle(
         CreateExerciseRequest request,
         CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Попытка создания упражнения: {ExerciseName} ({MuscleGroup}) для типа {ExerciseTypeId}", 
-            request.Name, request.MuscleGroup, request.ExerciseTypeId);
- 
+        logger.LogInformation("Попытка создания упражнения: {ExerciseName} ({MuscleGroup})",
+            request.Name, request.MuscleGroup);
+
         var nameResult = ExerciseName.Create(request.Name);
         if (nameResult.IsFailure)
             return nameResult.Error;
@@ -29,17 +27,6 @@ public class CreateExerciseHandler(
         if (muscleGroupResult.IsFailure)
             return muscleGroupResult.Error;
 
-        var exerciseTypeId = ExerciseTypeId.Create(request.ExerciseTypeId);
-
-    
-        var exerciseType = await exerciseTypesRepository.GetByIdAsync(exerciseTypeId, cancellationToken);
-        if (exerciseType is null)
-        {
-            logger.LogWarning("Вид упражнения с ID {ExerciseTypeId} не найден", request.ExerciseTypeId);
-            return Errors.General.NotFound(request.ExerciseTypeId); 
-        }
-
-      
         var existingExercise = await exercisesRepository.GetByNameAsync(request.Name, cancellationToken);
         if (existingExercise.IsSuccess)
         {
@@ -50,9 +37,8 @@ public class CreateExerciseHandler(
      
         var exerciseId = ExerciseId.NewId();
         var exerciseResult = Exercise.Create(
-            exerciseId, 
-            exerciseTypeId, 
-            nameResult.Value, 
+            exerciseId,
+            nameResult.Value,
             muscleGroupResult.Value);
 
         if (exerciseResult.IsFailure)

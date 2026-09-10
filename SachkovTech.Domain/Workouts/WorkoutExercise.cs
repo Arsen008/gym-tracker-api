@@ -1,4 +1,5 @@
 using CSharpFunctionalExtensions;
+using SachkovTech.Domain;
 using SachkovTech.Domain.Shared;
 using SachkovTech.Domain.Shared.Ids;
 using SachkovTech.Domain.Workouts.ValueObjects;
@@ -10,19 +11,19 @@ public class WorkoutExercise : Entity<WorkoutExerciseId>
     private WorkoutExercise() { }
 
     internal WorkoutExercise(
-        WorkoutExerciseId id, 
-        WorkoutExerciseType exerciseType, 
-        Sets sets, 
-        Reps reps, 
+        WorkoutExerciseId id,
+        ExerciseId exerciseId,
+        Sets sets,
+        Reps reps,
         Weight weight) : base(id)
     {
-        ExerciseType = exerciseType;
+        ExerciseId = exerciseId;
         Sets = sets;
         Reps = reps;
         Weight = weight;
     }
 
-    public WorkoutExerciseType ExerciseType { get; private set; } = null!;
+    public ExerciseId ExerciseId { get; private set; } = null!;
     public Sets Sets { get; private set; } = null!;
     public Reps Reps { get; private set; } = null!;
     public Weight Weight { get; private set; } = null!;
@@ -37,15 +38,15 @@ public class WorkoutExercise : Entity<WorkoutExerciseId>
     }
 
     public static Result<WorkoutExercise, Error> Create(
-        WorkoutExerciseId id, 
-        WorkoutExerciseType exerciseType, 
-        Sets sets, 
-        Reps reps, 
+        WorkoutExerciseId id,
+        ExerciseId exerciseId,
+        Sets sets,
+        Reps reps,
         Weight weight)
     {
-        if (exerciseType == null)
-            return Errors.General.ValueIsRequired("ExerciseType");
+        if (exerciseId == null || exerciseId.Value == Guid.Empty)
+            return Errors.General.ValueIsRequired("ExerciseId");
 
-        return new WorkoutExercise(id, exerciseType, sets, reps, weight);
+        return new WorkoutExercise(id, exerciseId, sets, reps, weight);
     }
 }

@@ -9,9 +9,6 @@ public class CreateExerciseRequestValidator : AbstractValidator<CreateExerciseRe
 {
     public CreateExerciseRequestValidator()
     {
-        RuleFor(c => c.ExerciseTypeId).NotEmpty()
-            .WithError(Errors.General
-                .ValueIsRequired("ExerciseTypeId"));
         RuleFor(c => c.Name).MustBeValueObject(ExerciseName.Create);
         RuleFor(c => c.MuscleGroup).MustBeValueObject(MuscleGroup.Create);
     }
