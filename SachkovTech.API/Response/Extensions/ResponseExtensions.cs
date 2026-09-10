@@ -14,12 +14,10 @@ public static class ResponseExtensions
         if (result.IsValid)
             throw new InvalidOperationException("Result cannot be successful");
 
-        var validationErrors = result.Errors;
-
-        var responseErrors = from validationError in validationErrors
-            let errorMessage = validationError.ErrorMessage
-            let error = Error.Deserialize(errorMessage)
-            select new ResponseError(error.Code, error.Message, validationError.PropertyName);
+        var responseErrors = result.Errors.Select(failure =>
+            failure.CustomState is Error error
+                ? new ResponseError(error.Code, error.Message, failure.PropertyName)
+                : new ResponseError("value.is.invalid", failure.ErrorMessage, failure.PropertyName));
 
         var envelope = Envelope.Error(responseErrors);
 

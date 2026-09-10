@@ -10,7 +10,7 @@ public class CreateExerciseDtoValidator : AbstractValidator<CreateExerciseDto>
     {
         RuleFor(x => x.ExerciseId)
             .NotEmpty()
-            .WithMessage(Errors.General.ValueIsRequired("ExerciseId").Serialize());
+            .WithError(Errors.General.ValueIsRequired("ExerciseId"));
 
         RuleFor(x => x.Sets).MustBeValueObject(Sets.Create);
         RuleFor(x => x.Reps).MustBeValueObject(Reps.Create);

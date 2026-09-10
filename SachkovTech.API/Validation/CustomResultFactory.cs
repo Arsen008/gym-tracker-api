@@ -25,37 +25,38 @@ public class CustomResultFactory(ILogger<CustomResultFactory> logger)
             throw new InvalidOperationException("ValidationProblemDetails is null");
         }
 
-        // Авторитетный список сообщений, порождённых именно FluentValidation-правилами
-        // для этого запроса. Всё, чего здесь нет, пришло от model binding
-        // (System.Text.Json) или встроенной DataAnnotations-валидации — такой текст
-        // может содержать имена типов, Path/LineNumber/BytePositionInLine и наружу не идёт.
-        var fluentValidationMessages = validationResults?.Values
-            .SelectMany(result => result.Errors)
-            .Select(failure => failure.ErrorMessage)
-            .ToHashSet(StringComparer.Ordinal) ?? [];
-
         List<ResponseError> responseErrors = [];
+
+        // (1) Ошибки FluentValidation — типизированные ValidationFailure.
+        // CustomState несёт доменный Error (см. CustomValidators), если правило его задало.
+        var fluentValidationFailures = (validationResults?.Values ?? Enumerable.Empty<ValidationResult>())
+            .SelectMany(result => result.Errors)
+            .ToList();
+
+        foreach (var failure in fluentValidationFailures)
+        {
+            responseErrors.Add(failure.CustomState is Error error
+                ? new ResponseError(error.Code, error.Message, failure.PropertyName)
+                : new ResponseError(InvalidValueCode, failure.ErrorMessage, failure.PropertyName));
+        }
+
+        // (2) Всё остальное в ModelState — это model binding (System.Text.Json) или
+        // встроенная DataAnnotations-валидация. Такой текст может содержать имена типов,
+        // Path/LineNumber/BytePositionInLine — наружу не идёт, только в лог.
+        var fluentValidationMessages = fluentValidationFailures
+            .Select(failure => failure.ErrorMessage)
+            .ToHashSet(StringComparer.Ordinal);
 
         foreach (var (invalidField, validationErrors) in validationProblemDetails.Errors)
         {
             foreach (var errorMessage in validationErrors)
             {
-                if (Error.TryDeserialize(errorMessage, out var error))
-                {
-                    // Сериализованный доменный Error из FluentValidation-валидатора.
-                    responseErrors.Add(new ResponseError(error.Code, error.Message, invalidField));
-                    continue;
-                }
-
                 if (fluentValidationMessages.Contains(errorMessage))
                 {
-                    // Голое правило FluentValidation ("'Name' must not be empty") — не секретно.
-                    responseErrors.Add(new ResponseError(InvalidValueCode, errorMessage, invalidField));
+                    // Копия FluentValidation-фейла, уже добавлена в шаге (1).
                     continue;
                 }
 
-                // Сообщение model binding / DataAnnotations — потенциальная утечка.
-                // Клиенту — нейтральный текст, исходный — только в лог.
                 logger.LogWarning(
                     "Ошибка привязки модели скрыта от клиента. Поле: {InvalidField}. Исходное сообщение: {RawMessage}",
                     invalidField,

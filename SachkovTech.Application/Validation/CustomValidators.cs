@@ -1,5 +1,6 @@
 using CSharpFunctionalExtensions;
 using FluentValidation;
+using FluentValidation.Results;
 using SachkovTech.Domain.Shared;
 
 namespace SachkovTech.Application.Validation;
@@ -17,8 +18,11 @@ public static class CustomValidators
             if (result.IsSuccess)
                 return;
 
-            context.AddFailure(result.Error.Serialize());
-            
+            context.AddFailure(new ValidationFailure(context.PropertyPath, result.Error.Message)
+            {
+                CustomState = result.Error,
+                ErrorCode = result.Error.Code
+            });
         });
     }
 
@@ -26,6 +30,6 @@ public static class CustomValidators
         this IRuleBuilderOptions<T, TProperty> rule,
         Error error)
     {
-        return rule.WithMessage(error.Serialize());
+        return rule.WithMessage(error.Message).WithState(_ => error);
     }
 }
