@@ -32,17 +32,28 @@ public record Error
 
     public static Error Deserialize(string serialized)
     {
-        var parts = serialized.Split(SEPARATOR);
-        
-        if (parts.Length < 3)
-            throw new ArgumentException("Invalid serialized format");
-        
-        if (Enum.TryParse<ErrorType>(parts[2], out var type) == false)
+        if (TryDeserialize(serialized, out var error) == false)
             throw new ArgumentException("Invalid serialized format");
 
-        return new Error(parts[0], parts[1], type);
+        return error;
     }
-   
+
+    public static bool TryDeserialize(string serialized, out Error error)
+    {
+        error = null!;
+
+        var parts = serialized.Split(SEPARATOR);
+
+        if (parts.Length < 3)
+            return false;
+
+        if (Enum.TryParse<ErrorType>(parts[2], out var type) == false)
+            return false;
+
+        error = new Error(parts[0], parts[1], type);
+        return true;
+    }
+
 }
 
 public enum ErrorType 

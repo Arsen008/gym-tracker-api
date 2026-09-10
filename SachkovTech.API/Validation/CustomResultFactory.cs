@@ -26,8 +26,9 @@ public class CustomResultFactory : IFluentValidationAutoValidationResultFactory
         foreach (var (invalidField, validationErrors) in validationProblemDetails.Errors)
         {
             var errors = from errorMessage in validationErrors
-                let error = Error.Deserialize(errorMessage)
-                select new ResponseError(error.Code, error.Message, invalidField);
+                select Error.TryDeserialize(errorMessage, out var error)
+                    ? new ResponseError(error.Code, error.Message, invalidField)
+                    : new ResponseError("value.is.invalid", errorMessage, invalidField);
 
             responseErrors.AddRange(errors);
         }
