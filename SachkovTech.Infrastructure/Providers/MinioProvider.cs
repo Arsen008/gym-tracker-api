@@ -19,7 +19,8 @@ public class MinioProvider : IFileProvider
         _logger = logger;
     }
 
-    public async Task<Result<string, Error>> UploadFile(FileData fileData, CancellationToken cancellationToken = default)
+    public async Task<Result<string, Error>> UploadFile(FileData fileData,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -39,7 +40,7 @@ public class MinioProvider : IFileProvider
                 .WithObject(fileData.ObjectName);
 
             await _minioClient.PutObjectAsync(putObjectArgs, cancellationToken);
-            return fileData.ObjectName; 
+            return fileData.ObjectName;
         }
         catch (Exception ex)
         {
@@ -48,7 +49,8 @@ public class MinioProvider : IFileProvider
         }
     }
 
-    public async Task<Result<string, Error>> RemoveFile(string bucketName, string objectName, CancellationToken cancellationToken = default)
+    public async Task<Result<string, Error>> RemoveFile(string bucketName, string objectName,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -66,14 +68,15 @@ public class MinioProvider : IFileProvider
         }
     }
 
-    public async Task<Result<string, Error>> GetPresignedUrl(string bucketName, string objectName, CancellationToken cancellationToken = default)
+    public async Task<Result<string, Error>> GetPresignedUrl(string bucketName, string objectName,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             var presignedArgs = new PresignedGetObjectArgs()
                 .WithBucket(bucketName)
                 .WithObject(objectName)
-                .WithExpiry(60 * 60 * 24);  
+                .WithExpiry(60 * 60 * 24);
 
             var url = await _minioClient.PresignedGetObjectAsync(presignedArgs);
             return url;
@@ -83,5 +86,51 @@ public class MinioProvider : IFileProvider
             _logger.LogError(ex, "Ошибка при получении ссылки на файл {ObjectName}", objectName);
             return Error.Failure("storage.link_failed", "Ошибка при генерации ссылки.");
         }
+    }
+
+    public async Task<Result<IReadOnlyList<string>, Error>> UploadFiles(IEnumerable<FileData> files,
+        CancellationToken cancellationToken = default)
+    {
+        var fileList = files.ToList();
+
+        using var limiter = new SemaphoreSlim(3);
+
+        var tasks = fileList.Select(file => UploadWithLimit(file, limiter, cancellationToken)).ToList();
+
+        var results = await Task.WhenAll(tasks);
+        if (results.All(r => r.IsSuccess))
+        {
+            var names = results.Select(r => r.Value).ToList();
+            return names;
+        }
+        else
+        {
+            for (var i = 0; i < results.Length; i++)
+            {
+                if (results[i].IsSuccess)
+                {
+                    await RemoveFile(fileList[i].BucketName, fileList[i].ObjectName, CancellationToken.None);
+                }
+            }
+
+            return results.First(r => r.IsFailure).Error;
+        }
+
+    }
+
+
+    private async Task<Result<string, Error>> UploadWithLimit(FileData fileData, SemaphoreSlim limiter,
+        CancellationToken cancellationToken)
+    {
+     await   limiter.WaitAsync(cancellationToken);
+     try
+     {
+     var result = await UploadFile(fileData, cancellationToken);
+    return   result;
+     }
+     finally
+     {
+         limiter.Release();
+     }
     }
 }
