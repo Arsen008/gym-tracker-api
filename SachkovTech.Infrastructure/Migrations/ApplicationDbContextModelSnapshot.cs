@@ -27,10 +27,6 @@ namespace SachkovTech.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("MediaPath")
-                        .HasColumnType("text")
-                        .HasColumnName("media_path");
-
                     b.Property<string>("MuscleGroup")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -110,6 +106,37 @@ namespace SachkovTech.Infrastructure.Migrations
                     b.HasIndex("WorkoutId");
 
                     b.ToTable("workout_exercises", (string)null);
+                });
+
+            modelBuilder.Entity("SachkovTech.Domain.Exercises.Exercise", b =>
+                {
+                    b.OwnsMany("SachkovTech.Domain.Exercises.ValueObjects.MediaPath", "MediaPaths", b1 =>
+                        {
+                            b1.Property<Guid>("ExerciseId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasAnnotation("Relational:JsonPropertyName", "value");
+
+                            b1.HasKey("ExerciseId", "__synthesizedOrdinal");
+
+                            b1.ToTable("exercises");
+
+                            b1
+                                .ToJson("media_paths")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ExerciseId");
+                        });
+
+                    b.Navigation("MediaPaths");
                 });
 
             modelBuilder.Entity("SachkovTech.Domain.Workout", b =>

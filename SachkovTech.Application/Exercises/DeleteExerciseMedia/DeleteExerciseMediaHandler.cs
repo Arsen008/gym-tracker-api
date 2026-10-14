@@ -22,20 +22,20 @@ public class DeleteExerciseMediaHandler(
 
         var exercise = exerciseResult.Value;
 
-        if (exercise.MediaPath == null)
+        if (exercise.MediaPaths.Count == 0)
             return Result.Success<Error>();
 
-      
-        var removeResult = await fileProvider.RemoveFile(
-            BUCKET_NAME,
-            exercise.MediaPath.Value,
-            cancellationToken);
+        foreach (var mediaPath in exercise.MediaPaths)
+        {
+            var removeResult = await fileProvider.RemoveFile(BUCKET_NAME,
+                mediaPath.Value,
+                cancellationToken);
 
         if (removeResult.IsFailure)
             return removeResult.Error;
+    }
 
-         
-        exercise.ClearMedia();
+    exercise.ClearMedia();
 
          
         await repository.SaveAsync(exercise, cancellationToken);

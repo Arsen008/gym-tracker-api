@@ -33,13 +33,13 @@ public class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
                 value => MuscleGroup.Create(value).Value))
             .IsRequired()
             .HasMaxLength(MuscleGroup.MaxLength);
-        
-        builder.Property(e => e.MediaPath)
-            .HasConversion(new ValueConverter<MediaPath?, string?>(
-                path => path != null ? path.Value : null,
-                value => string.IsNullOrWhiteSpace(value) ? null : MediaPath.Create(value).Value))
-            .HasColumnName("media_path")
-            .IsRequired(false);
+
+        builder.OwnsMany(e => e.MediaPaths, tb =>
+        {
+            tb.ToJson("media_paths");
+            tb.Property(m => m.Value).HasJsonPropertyName("value");
+        });
+            
         
         builder.Property<bool>("_isDeleted")
             .UsePropertyAccessMode(PropertyAccessMode.Field)

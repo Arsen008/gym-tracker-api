@@ -4,8 +4,10 @@ using SachkovTech.Application.Exercises.CreateExercise;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SachkovTech.Application.Exercises.DeleteExercise;
+using SachkovTech.Application.Exercises.DeleteExerciseMedia;
 using SachkovTech.Application.Exercises.UpdateExercise;
 using SachkovTech.Application.Exercises.UploadExerciseMedia;
+using SachkovTech.Application.Exercises.UploadExerciseMedias;
 using SachkovTech.Application.Workouts.DeleteWorkout;
 using SachkovTech.Application.Workouts.UpdateWorkout;
 
@@ -23,6 +25,8 @@ public  static class Inject
         services.AddScoped<UpdateWorkoutHandler>();
         services.AddScoped<DeleteWorkoutHandler>();
         services.AddScoped<UploadExerciseMediaHandler>();
+        services.AddScoped<UploadExerciseMediasHandler>();
+        services.AddScoped<DeleteExerciseMediaHandler>();
         services.AddValidatorsFromAssemblyContaining<UpdateWorkoutRequestValidator>();
         services.AddValidatorsFromAssembly(typeof(Inject).Assembly);
          

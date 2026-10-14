@@ -22,11 +22,16 @@ public class Exercise : Entity<ExerciseId> , ISoftDeletable
 
     public ExerciseName Name { get; private set; } = null!;
     public MuscleGroup MuscleGroup { get; private set; } = null!;
-    public MediaPath? MediaPath { get; private set; } 
+
+    private readonly List<MediaPath> _mediaPaths = [];
+    
+    public IReadOnlyList<MediaPath> MediaPaths => _mediaPaths;
+    
+ 
 
     public void AddMedia(MediaPath mediaPath)
     {
-        MediaPath = mediaPath;
+            _mediaPaths.Add(mediaPath);
     }
     public void Delete()
     {
@@ -42,7 +47,7 @@ public class Exercise : Entity<ExerciseId> , ISoftDeletable
 
     public void ClearMedia()
     {
-        MediaPath = null;
+        _mediaPaths.Clear();
     }
     public static Result<Exercise, Error> Create(
         ExerciseId id,

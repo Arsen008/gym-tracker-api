@@ -11,4 +11,8 @@ public interface IFileProvider
         CancellationToken cancellationToken = default);
     Task<Result<string, Error>> GetPresignedUrl(string bucketName, string objectName,
         CancellationToken cancellationToken = default);
+
+    Task<Result<IReadOnlyList<string>, Error>> UploadFiles(IEnumerable<FileData> files,
+        CancellationToken cancellationToken = default);
+
 }
