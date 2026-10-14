@@ -2,11 +2,13 @@ using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SachkovTech.API.Extensions;
+using SachkovTech.API.Extensions.Processors;
 using SachkovTech.Application.Exercises.CreateExercise;
 using SachkovTech.Application.Exercises.DeleteExercise;
 using SachkovTech.Application.Exercises.DeleteExerciseMedia;  
 using SachkovTech.Application.Exercises.UpdateExercise;
 using SachkovTech.Application.Exercises.UploadExerciseMedia;
+using SachkovTech.Application.Exercises.UploadExerciseMedias;
 
 namespace SachkovTech.API.Controllers;
 
@@ -86,6 +88,31 @@ public class ExercisesController : ApplicationController
 
         var result = await handler.Handle(command, cancellationToken);
 
+        return result.ToResponse();
+    }
+
+    [HttpPost("{id:guid}/media/batch")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadMedias(
+        [FromRoute] Guid id,
+        IFormFileCollection files,
+        [FromServices] UploadExerciseMediasHandler handler,
+        CancellationToken cancellationToken
+    )
+    {
+        if (files == null || files.Count == 0)
+        {
+            return BadRequest("Файлы не были переданы.");
+        }
+
+        await using var processor = new FormFileProcessor();
+        
+        var fileDtos = processor.Process(files);
+
+        var command = new UploadExerciseMediasCommand(id, fileDtos);
+
+        var result = await handler.Handle(command, cancellationToken);
+        
         return result.ToResponse();
     }
 }
