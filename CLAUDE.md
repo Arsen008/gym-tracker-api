@@ -6,26 +6,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Prerequisites: .NET SDK 9 (pinned via `global.json`, `rollForward: latestMinor`). Start backing services first: `docker compose up -d` (PostgreSQL 17 on host port 5434, Seq on 5341, MinIO on 9000/console 9001).
 
-- Build: `dotnet build SachkovTech.sln`
-- Run API: `dotnet run --project SachkovTech.API` (http `http://localhost:5164`, https `https://localhost:7246`, Swagger at `/swagger`, Development env by default)
-- Tests: no test project exists yet. To add one: `dotnet new xunit -o SachkovTech.<Name>.Tests && dotnet sln add ...`. Run with `dotnet test`, a single test with `dotnet test --filter "FullyQualifiedName~<Namespace.Class.Method>"`.
+- Build: `dotnet build GymTracker.sln`
+- Run API: `dotnet run --project GymTracker.API` (http `http://localhost:5164`, https `https://localhost:7246`, Swagger at `/swagger`, Development env by default)
+- Tests: no test project exists yet. To add one: `dotnet new xunit -o GymTracker.<Name>.Tests && dotnet sln add ...`. Run with `dotnet test`, a single test with `dotnet test --filter "FullyQualifiedName~<Namespace.Class.Method>"`.
 - Static analysis: Qodana (`qodana.yaml`, profile `qodana.starter`, `QDNET`) — `qodana scan` if the CLI is installed; otherwise runs in CI.
 
 ### EF Core migrations
 
-Migrations live in `SachkovTech.Infrastructure/Migrations`; startup project is the API. In Development, pending migrations are applied automatically on startup (`app.ApplyMigration()` in `Program.cs`, defined in `SachkovTech.API/AppExtensions.cs`).
+Migrations live in `GymTracker.Infrastructure/Migrations`; startup project is the API. In Development, pending migrations are applied automatically on startup (`app.ApplyMigration()` in `Program.cs`, defined in `GymTracker.API/AppExtensions.cs`).
 
-- Add: `dotnet ef migrations add <Name> --project SachkovTech.Infrastructure --startup-project SachkovTech.API`
-- Apply manually: `dotnet ef database update --project SachkovTech.Infrastructure --startup-project SachkovTech.API`
+- Add: `dotnet ef migrations add <Name> --project GymTracker.Infrastructure --startup-project GymTracker.API`
+- Apply manually: `dotnet ef database update --project GymTracker.Infrastructure --startup-project GymTracker.API`
 
 ## Architecture
 
 Four-project Clean Architecture solution. Dependency direction: **API → Application + Infrastructure**, **Infrastructure → Application + Domain**, **Application → Domain**, **Domain → (only CSharpFunctionalExtensions + EF Core)**.
 
-- **SachkovTech.Domain** — aggregates (`Exercise`, `ExerciseType`, `Workout` + `WorkoutExercise` child), value objects, strongly-typed IDs, shared `Error` type.
-- **SachkovTech.Application** — use-case handlers, request/command DTOs, FluentValidation validators, repository *interfaces*, `IFileProvider` abstraction.
-- **SachkovTech.Infrastructure** — `ApplicationDbContext`, EF `IEntityTypeConfiguration` classes, repository implementations, `MinioProvider`, `SoftDeleteInterceptor`.
-- **SachkovTech.API** — controllers, response envelope, exception middleware, Serilog + Swagger wiring.
+- **GymTracker.Domain** — aggregates (`Exercise`, `ExerciseType`, `Workout` + `WorkoutExercise` child), value objects, strongly-typed IDs, shared `Error` type.
+- **GymTracker.Application** — use-case handlers, request/command DTOs, FluentValidation validators, repository *interfaces*, `IFileProvider` abstraction.
+- **GymTracker.Infrastructure** — `ApplicationDbContext`, EF `IEntityTypeConfiguration` classes, repository implementations, `MinioProvider`, `SoftDeleteInterceptor`.
+- **GymTracker.API** — controllers, response envelope, exception middleware, Serilog + Swagger wiring.
 
 ### Composition / DI
 
@@ -61,7 +61,7 @@ FluentValidation. `AddFluentValidationAutoValidation` auto-validates request bod
 
 ### File storage
 
-MinIO via `Minio.AspNetCore`. Abstraction `IFileProvider` (`Application/FileProvider/`, namespace `SachkovTech.Application.Providers`) with `MinioProvider` impl; payload is `FileData(Stream, BucketName, ObjectName)` (namespace `SachkovTech.Application.Models`). Exercise media goes to bucket `exercise-media` (auto-created on first upload); presigned URLs expire after 24h.
+MinIO via `Minio.AspNetCore`. Abstraction `IFileProvider` (`Application/FileProvider/`, namespace `GymTracker.Application.Providers`) with `MinioProvider` impl; payload is `FileData(Stream, BucketName, ObjectName)` (namespace `GymTracker.Application.Models`). Exercise media goes to bucket `exercise-media` (auto-created on first upload); presigned URLs expire after 24h.
 
 ### Logging
 
@@ -76,7 +76,7 @@ Serilog → Console + Debug + Seq (Seq URL from the `Seq` config key). `UseSeril
 ## Known inconsistencies (don't mimic; fix if touching)
 
 - `ExerciseType.Create` returns `Result<ExerciseType>` with plain-string (Russian) errors instead of the standard `Result<T, Error>`.
-- Strongly-typed IDs are split across namespaces: `ExerciseId` / `WorkoutId` are in `SachkovTech.Domain`, while `ExerciseTypeId` / `WorkoutExerciseId` are in `SachkovTech.Domain.Shared.Ids`.
+- Strongly-typed IDs are split across namespaces: `ExerciseId` / `WorkoutId` are in `GymTracker.Domain`, while `ExerciseTypeId` / `WorkoutExerciseId` are in `GymTracker.Domain.Shared.Ids`.
 - `IExerciseTypesRepository` is registered twice (in `Program.cs` and `Infrastructure/Inject.cs`).
 - `MinioOptions.WithSsl` has no key in `appsettings.json` (falls back to the `false` default). Config binding is case-insensitive, so key casing in the `Minio` section is cosmetic, not a binding bug.
 - The repo currently has **no commits** — everything is staged/untracked on `master` (default branch for PRs is `main`).

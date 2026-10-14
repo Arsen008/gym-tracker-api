@@ -1,6 +1,6 @@
 [English](README.md) | Русский
 
-# SachkovTech
+# GymTracker
 
 Бэкенд для приложения-трекера тренировок: управление упражнениями, видами упражнений и тренировками, медиафайлы хранятся в объектном хранилище. Учебный проект по курсу «.NET Fullstack», поэтому в нём намеренно используются явные подходы (Clean Architecture, паттерн Result, строго типизированные идентификаторы), а не сокращённые решения.
 
@@ -20,10 +20,10 @@
 
 Четыре проекта, у каждого своя зона ответственности:
 
-- **SachkovTech.Domain** — агрегаты (`Exercise`, `ExerciseType`, `Workout` + `WorkoutExercise`), value-объекты, строго типизированные идентификаторы, общий тип `Error`.
-- **SachkovTech.Application** — обработчики сценариев, DTO запросов/команд, валидаторы, интерфейсы репозиториев, абстракция `IFileProvider`.
-- **SachkovTech.Infrastructure** — `ApplicationDbContext`, конфигурации EF, реализации репозиториев, миграции, `MinioProvider`, `SoftDeleteInterceptor`.
-- **SachkovTech.API** — контроллеры, обёртка ответа, middleware обработки исключений, подключение Serilog и Swagger.
+- **GymTracker.Domain** — агрегаты (`Exercise`, `ExerciseType`, `Workout` + `WorkoutExercise`), value-объекты, строго типизированные идентификаторы, общий тип `Error`.
+- **GymTracker.Application** — обработчики сценариев, DTO запросов/команд, валидаторы, интерфейсы репозиториев, абстракция `IFileProvider`.
+- **GymTracker.Infrastructure** — `ApplicationDbContext`, конфигурации EF, реализации репозиториев, миграции, `MinioProvider`, `SoftDeleteInterceptor`.
+- **GymTracker.API** — контроллеры, обёртка ответа, middleware обработки исключений, подключение Serilog и Swagger.
 
 Направление зависимостей: **API → Application + Infrastructure**, **Infrastructure → Application + Domain**, **Application → Domain**. У Domain зависимостей на другие проекты нет.
 
@@ -42,14 +42,14 @@
 2. (Опционально) задать креды MinIO через user-secrets — иначе используются значения по умолчанию:
 
    ```bash
-   dotnet user-secrets set "Minio:AccessKey" "minioadmin" --project SachkovTech.API
-   dotnet user-secrets set "Minio:SecretKey" "minioadmin" --project SachkovTech.API
+   dotnet user-secrets set "Minio:AccessKey" "minioadmin" --project GymTracker.API
+   dotnet user-secrets set "Minio:SecretKey" "minioadmin" --project GymTracker.API
    ```
 
 3. Запустить API (в окружении Development незапущенные миграции EF применяются автоматически при старте):
 
    ```bash
-   dotnet run --project SachkovTech.API
+   dotnet run --project GymTracker.API
    ```
 
 4. Открыть Swagger UI: <https://localhost:7246/swagger> (или <http://localhost:5164/swagger>).
