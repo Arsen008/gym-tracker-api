@@ -23,7 +23,6 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<Workout> Workouts => Set<Workout>();
-    public DbSet<ToDoItem> ToDoItems => Set<ToDoItem>();
     public DbSet<Exercise> Exercises => Set<Exercise>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

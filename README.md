@@ -69,8 +69,3 @@ Routes are served under the controller name; responses are wrapped in the standa
 | PUT | `/workouts/{id}` | Update a workout (tags) |
 | DELETE | `/workouts/{id}` | Soft-delete a workout |
 | POST | `/file` | List MinIO buckets (diagnostic) |
-| GET | `/api/todoitems` | List to-do items *(scaffold)* |
-| GET | `/api/todoitems/{id}` | Get a to-do item by id *(scaffold)* |
-| POST | `/api/todoitems` | Create a to-do item *(scaffold)* |
-| PUT | `/api/todoitems/{id}` | Update a to-do item title *(scaffold)* |
-| DELETE | `/api/todoitems/{id}` | Delete a to-do item *(scaffold)* |

@@ -69,8 +69,3 @@
 | PUT | `/workouts/{id}` | Обновить тренировку (теги) |
 | DELETE | `/workouts/{id}` | Мягко удалить тренировку |
 | POST | `/file` | Список бакетов MinIO (диагностика) |
-| GET | `/api/todoitems` | Список задач *(заготовка)* |
-| GET | `/api/todoitems/{id}` | Задача по id *(заготовка)* |
-| POST | `/api/todoitems` | Создать задачу *(заготовка)* |
-| PUT | `/api/todoitems/{id}` | Обновить название задачи *(заготовка)* |
-| DELETE | `/api/todoitems/{id}` | Удалить задачу *(заготовка)* |

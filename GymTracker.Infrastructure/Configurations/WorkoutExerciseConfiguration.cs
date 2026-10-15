@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GymTracker.Domain;
+using GymTracker.Domain.Exercises;
 using GymTracker.Domain.Shared.Ids;
 using GymTracker.Domain.Workouts;
 using GymTracker.Domain.Workouts.ValueObjects;
@@ -25,7 +26,6 @@ public class WorkoutExerciseConfiguration : IEntityTypeConfiguration<WorkoutExer
                 value => WorkoutId.Create(value));
 
         builder.Property(we => we.ExerciseId)
-            .HasColumnName("exercise_id")
             .HasConversion(
                 id => id.Value,
                 value => ExerciseId.Create(value));
@@ -39,6 +39,11 @@ public class WorkoutExerciseConfiguration : IEntityTypeConfiguration<WorkoutExer
             .HasConversion(
                 sets => sets.Value,
                 value => Sets.Create(value).Value);
+        
+        builder.HasOne<Exercise>()
+            .WithMany()
+            .HasForeignKey(we => we.ExerciseId)
+            .OnDelete(DeleteBehavior.Restrict);
         
         builder.Property(we => we.Weight)
             .HasConversion(
