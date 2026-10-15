@@ -12,7 +12,7 @@ public class CreateExerciseHandler(
     IExercisesRepository exercisesRepository,
     ILogger<CreateExerciseHandler> logger)
 {
-    public async Task<Result<Guid, Error>> Handle(
+    public async Task<Result<CreateExerciseResponse, Error>> Handle(
         CreateExerciseRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -51,6 +51,6 @@ public class CreateExerciseHandler(
 
         logger.LogInformation("Упражнение {ExerciseName} успешно сохранено с ID: {ExerciseId}", request.Name, exerciseId.Value);
 
-        return exerciseId.Value;
+        return new CreateExerciseResponse(exerciseId.Value);
     }
 }
