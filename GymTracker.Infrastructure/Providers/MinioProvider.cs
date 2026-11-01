@@ -22,31 +22,13 @@ public class MinioProvider : IFileProvider
     public async Task<Result<string, Error>> UploadFile(FileData fileData,
         CancellationToken cancellationToken = default)
     {
-        try
+     var bucketResult = await EnsureBucketExists(fileData.BucketName, cancellationToken);
+
+        if (bucketResult.IsFailure)
         {
-            var bucketExist = await _minioClient.BucketExistsAsync(
-                new BucketExistsArgs().WithBucket(fileData.BucketName), cancellationToken);
-
-            if (!bucketExist)
-            {
-                await _minioClient.MakeBucketAsync(
-                    new MakeBucketArgs().WithBucket(fileData.BucketName), cancellationToken);
-            }
-
-            var putObjectArgs = new PutObjectArgs()
-                .WithBucket(fileData.BucketName)
-                .WithStreamData(fileData.Stream)
-                .WithObjectSize(fileData.Stream.Length)
-                .WithObject(fileData.ObjectName);
-
-            await _minioClient.PutObjectAsync(putObjectArgs, cancellationToken);
-            return fileData.ObjectName;
+            return bucketResult.Error;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Ошибка при загрузке файла {ObjectName}", fileData.ObjectName);
-            return Error.Failure("storage.upload_failed", "Ошибка при загрузке файла.");
-        }
+        return await PutObject(fileData, cancellationToken);
     }
 
     public async Task<Result<string, Error>> RemoveFile(string bucketName, string objectName,
@@ -92,7 +74,12 @@ public class MinioProvider : IFileProvider
         CancellationToken cancellationToken = default)
     {
         var fileList = files.ToList();
-
+        foreach (var bucketName in fileList.Select(f => f.BucketName).Distinct())
+        {
+            var bucketResult = await EnsureBucketExists(bucketName, cancellationToken);
+            if (bucketResult.IsFailure)
+                return bucketResult.Error;
+        }
         using var limiter = new SemaphoreSlim(3);
 
         var tasks = fileList.Select(file => UploadWithLimit(file, limiter, cancellationToken)).ToList();
@@ -125,12 +112,55 @@ public class MinioProvider : IFileProvider
      await   limiter.WaitAsync(cancellationToken);
      try
      {
-     var result = await UploadFile(fileData, cancellationToken);
+     var result = await PutObject(fileData, cancellationToken);
     return   result;
      }
      finally
      {
          limiter.Release();
      }
+    }
+
+    private async Task<UnitResult<Error>> EnsureBucketExists(string bucketName, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var bucketExist = await _minioClient.BucketExistsAsync(
+                new BucketExistsArgs().WithBucket(bucketName), cancellationToken);
+            if (!bucketExist)
+            {
+                await _minioClient.MakeBucketAsync(
+                    new MakeBucketArgs().WithBucket(bucketName), cancellationToken);
+            }
+
+            return UnitResult.Success<Error>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при подготовке бакета {BucketName}", bucketName);
+            return Error.Failure("storage.bucket_failed", "Ошибка при подготовке хранилища.");
+            
+        }
+        
+    }
+
+    private async Task<Result<string, Error>> PutObject(FileData fileData, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var putObjectArgs = new PutObjectArgs()
+                .WithBucket(fileData.BucketName)
+                .WithStreamData(fileData.Stream)
+                .WithObjectSize(fileData.Stream.Length)
+                .WithObject(fileData.ObjectName);
+
+            await _minioClient.PutObjectAsync(putObjectArgs, cancellationToken);
+            return fileData.ObjectName;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при загрузке файла {ObjectName}", fileData.ObjectName);
+            return Error.Failure("storage.upload_failed", "Ошибка при загрузке файла.");
+        }
     }
 }
